@@ -7,6 +7,7 @@
 
 import UIKit
 import FirebaseAuth
+import Firebase
 
 class LoginViewController: UIViewController{
     
@@ -71,6 +72,33 @@ class LoginViewController: UIViewController{
                 print(error)
             }
             // ...
+            let user = Auth.auth().currentUser
+            if let user = user {
+              // The user's ID, unique to the Firebase project.
+              // Do NOT use this value to authenticate with your backend server,
+              // if you have one. Use getTokenWithCompletion:completion: instead.
+              let uid = user.uid
+              let email = user.email
+              let photoURL = user.photoURL
+              var multiFactorString = "MultiFactor: "
+              for info in user.multiFactor.enrolledFactors {
+                multiFactorString += info.displayName ?? "[DispayName]"
+                multiFactorString += " "
+              }
+                let docData = [
+                                "email": email,
+                                "userID": uid,
+                                "photo": photoURL
+                            ] as [String : Any]
+                Firestore.firestore().collection("user").document(uid).setData(docData) {(err) in
+                                if let err = err {
+                                    print("manager情報の保存に失敗しました\(err)")
+                                    return
+                                }
+                                print("manager情報の保存に成功しました")
+                            }
+              // ...
+            }
         }
        
     }

@@ -246,6 +246,7 @@
                     </view>
                     <tabBarItem key="tabBarItem" title="プロフィール" image="person.crop.circle" catalog="system" selectedImage="person.crop.circle.fill" id="lHZ-XC-Mo2"/>
                     <connections>
+                        <outlet property="displayNameField" destination="VFV-iF-4fC" id="5PA-OF-hze"/>
                         <outlet property="profileImageButton" destination="JpR-Ee-3LW" id="Mcy-QJ-UCa"/>
                         <outlet property="profileImageView" destination="KGP-61-0q0" id="MLw-fD-ZdA"/>
                     </connections>
