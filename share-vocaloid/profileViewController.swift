@@ -6,8 +6,11 @@
 //
 
 import UIKit
+import Firebase
+import FirebaseFirestore
 import FirebaseStorage
 import FirebaseAuth
+
 
 class profileViewController: UIViewController,UIImagePickerControllerDelegate,UINavigationControllerDelegate {
     
@@ -17,20 +20,88 @@ class profileViewController: UIViewController,UIImagePickerControllerDelegate,UI
     
     @IBOutlet var displayNameField: UITextField!
     
+    @IBOutlet var displayNameButton: UIButton!
+    
+    let firestore = Firestore.firestore()
+    
+    var userNameArray:[String] = []
+    
     var downloadURL: URL?
     
     struct StorageMetaData {
         var contentType: String
     }
-
+    
     func handleError(error: Error, msg: String) {
         print("\(msg) Error: \(error.localizedDescription)")
     }
-
+    
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        func getImageByUrl(url: String, completion: @escaping (UIImage?) -> Void) {
+            guard let imageUrl = URL(string: url) else {
+                print("Invalid URL: \(url)")
+                completion(nil)
+                return
+            }
+
+            let task = URLSession.shared.dataTask(with: imageUrl) { data, response, error in
+                if let error = error {
+                    print("Error downloading image: \(error.localizedDescription)")
+                    completion(nil)
+                    return
+                }
+
+                guard let data = data, let image = UIImage(data: data) else {
+                    print("Invalid image data")
+                    completion(nil)
+                    return
+                }
+
+                completion(image)
+            }
+            task.resume()
+        }
+
+        
+        if let user = Auth.auth().currentUser {
+                    let photoURL = user.photoURL?.absoluteString ?? ""
+                    getImageByUrl(url: photoURL) { [weak self] image in
+                        DispatchQueue.main.async {
+                            self?.profileImageView.image = image
+                        }
+                    }
+                }
+        
+        firestore.collection("user").getDocuments() { [self] (querySnapshot, err) in
+                    if let err = err {
+                print("Error getting documents: \(err)")
+                    } else {
+                        print(querySnapshot!.documents.count)
+                        for document in querySnapshot!.documents {
+                            print("\(document.documentID) => \(document.data())")
+                            if let userName = document.data()["userName"] as? String {
+                                print(userName)
+                                self.userNameArray.append(userName)
+                                print(self.userNameArray)
+                                if !userNameArray.isEmpty {
+                                displayNameField.text = userNameArray[0]
+                                    print(userNameArray)
+                                }else{
+                                    print(userNameArray)
+                                }
+                            }
+                        }
+                    }
+                }
+        
+       
+        
+        
+        
         
         // 枠線の幅の設定
         profileImageView.layer.borderWidth = 3.0
@@ -45,7 +116,12 @@ class profileViewController: UIViewController,UIImagePickerControllerDelegate,UI
     }
     
     
-    @IBAction func selectProfileImage() {
+    
+    
+    
+    
+    
+        func selectProfileImage() {
         let imagePickerController: UIImagePickerController = UIImagePickerController()
         
         imagePickerController.sourceType = UIImagePickerController.SourceType.photoLibrary
@@ -67,13 +143,16 @@ class profileViewController: UIViewController,UIImagePickerControllerDelegate,UI
         guard let imageData = profileImage.jpegData(compressionQuality: 0.3) else{return}
         
         // 2：ストレージイメージ参照を作成->保存するFirestorageの場所
+        let fileName = NSUUID().uuidString
+        print("aaaaaaaa")
+        print(fileName)
         let imageRef = Storage.storage().reference().child("gs://share-vocaloid.appspot.com")
         
         // 3：メタデータを設定
         let metaData = StorageMetadata()
         metaData.contentType = "image/jpeg"
-
-
+        
+        
         
         // 4：データをアップロード
         imageRef.putData(imageData, metadata: metaData) { (metaData, error) in
@@ -93,7 +172,35 @@ class profileViewController: UIViewController,UIImagePickerControllerDelegate,UI
                 let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
                 changeRequest?.photoURL = url
                 changeRequest?.commitChanges { error in
-                  // ...
+                    // ...
+                }
+                
+                let user = Auth.auth().currentUser
+                if let user = user {
+                    // The user's ID, unique to the Firebase project.
+                    // Do NOT use this value to authenticate with your backend server,
+                    // if you have one. Use getTokenWithCompletion:completion: instead.
+                    let uid = user.uid
+                    let email = user.email
+                    let photoURL = user.photoURL?.absoluteString ?? ""
+                    var multiFactorString = "MultiFactor: "
+                    for info in user.multiFactor.enrolledFactors {
+                        multiFactorString += info.displayName ?? "[DispayName]"
+                        multiFactorString += " "
+                    }
+                    // ...
+                    let docData = [
+                        "email": email,
+                        "userID": uid,
+                        "photo": photoURL
+                    ] as [String : Any]
+                    Firestore.firestore().collection("user").document(uid).setData(docData) {(err) in
+                        if let err = err {
+                            print("manager情報の保存に失敗しました\(err)")
+                            return
+                        }
+                        print("manager情報の保存に成功しました")
+                    }
                 }
                 
                 
@@ -151,6 +258,39 @@ class profileViewController: UIViewController,UIImagePickerControllerDelegate,UI
              }
              */
             
+        }
+    }
+    @IBAction func decideUserName() {
+        let userName = displayNameField.text
+        
+        let user = Auth.auth().currentUser
+        if let user = user {
+            // The user's ID, unique to the Firebase project.
+            // Do NOT use this value to authenticate with your backend server,
+            // if you have one. Use getTokenWithCompletion:completion: instead.
+            let uid = user.uid
+            let email = user.email
+            let photoURL = user.photoURL?.absoluteString ?? ""
+            var multiFactorString = "MultiFactor: "
+            for info in user.multiFactor.enrolledFactors {
+                multiFactorString += info.displayName ?? "[DispayName]"
+                multiFactorString += " "
+            }
+            
+            let docData = [
+                "email": email,
+                "userID": uid,
+                "photo": photoURL,
+                "userName": userName
+                
+            ] as [String : Any]
+            Firestore.firestore().collection("user").document(uid).setData(docData) {(err) in
+                if let err = err {
+                    print("manager情報の保存に失敗しました\(err)")
+                    return
+                }
+                print("manager情報の保存に成功しました")
+            }
         }
     }
 }

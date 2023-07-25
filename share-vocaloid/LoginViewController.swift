@@ -8,6 +8,7 @@
 import UIKit
 import FirebaseAuth
 import Firebase
+import FirebaseFirestore
 
 class LoginViewController: UIViewController{
     
@@ -33,24 +34,30 @@ class LoginViewController: UIViewController{
         super.viewDidLoad()
         
        
+//        if saveData.object(forKey: "userUid") as? String != nil{
+//            let nextVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "tabBar1") as! UITabBarController
+//            //遷移先の画面をフルスクリーンで表示
+//            nextVC.modalPresentationStyle = .fullScreen
+//            self.present(nextVC, animated: true, completion: nil) // 画面遷移
+//            print("成功")
+//
+//        }else{
+//            print("failed")
+//        }
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
         if saveData.object(forKey: "userUid") as? String != nil{
             let nextVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "tabBar1") as! UITabBarController
             //遷移先の画面をフルスクリーンで表示
             nextVC.modalPresentationStyle = .fullScreen
             self.present(nextVC, animated: true, completion: nil) // 画面遷移
+            print("成功")
             
         }else{
             print("failed")
         }
-        
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        let nextVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "tabBar1") as! UITabBarController
-        //遷移先の画面をフルスクリーンで表示
-        nextVC.modalPresentationStyle = .fullScreen
-        self.present(nextVC, animated: true, completion: nil) // 画面遷移
-        
     }
     
     

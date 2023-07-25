@@ -19,6 +19,8 @@ class TableViewCell: UITableViewCell {
     
     @IBOutlet var kyokumeiLavel: UILabel!
     
+    @IBOutlet var userNameLavel: UILabel!
+    
 
     override func awakeFromNib() {
         super.awakeFromNib()

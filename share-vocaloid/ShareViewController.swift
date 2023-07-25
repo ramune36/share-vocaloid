@@ -7,6 +7,7 @@
 
 import UIKit
 import Firebase
+import FirebaseFirestore
 
 class ShareViewController: UIViewController {
     
@@ -43,6 +44,9 @@ class ShareViewController: UIViewController {
     
     let firestore = Firestore.firestore()
     
+    let userUid = UserDefaults.standard.string(forKey: "userUid")
+
+    
     @IBAction func tapShareButton() {
         
         
@@ -68,7 +72,7 @@ class ShareViewController: UIViewController {
         }else if kyokumei == ""{
             present(alert,animated: true,completion: nil)
             }else{
-            firestore.collection("addresses").addDocument(data: ["URL": URL ?? "aaaa","osusume": osusume ?? "aaaa","vocal": vocal ?? "aaaa","sakkyoku": sakkyoku ?? "aaaa","kyokumei": kyokumei ?? "aaaa"
+                firestore.collection("addresses").addDocument(data: ["URL": URL ?? "aaaa","osusume": osusume ?? "aaaa","vocal": vocal ?? "aaaa","sakkyoku": sakkyoku ?? "aaaa","kyokumei": kyokumei ?? "aaaa","userUid": userUid ?? "aaaa"
                                                                 ]) { err in
                 if let err = err {
                     print("Error adding document: \(err)")

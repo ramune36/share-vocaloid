@@ -7,6 +7,7 @@
 
 import UIKit
 import Firebase
+import FirebaseFirestore
 
 class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegate{
     
@@ -24,6 +25,12 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
     
     var kyokumeiArray: [String] = []
     
+    var displayNameArray: [String] = []
+    
+    var userUidArray: [String] = []
+    
+    var photoURLArray: [String] = []
+    
     let firestore = Firestore.firestore()
     
     let user = Auth.auth().currentUser
@@ -31,6 +38,8 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
     var saveData: UserDefaults = UserDefaults.standard
     
     let inuser = Auth.auth().currentUser
+    
+    @IBOutlet var reloadData: UIButton!
     
     
     override func viewDidLoad() {
@@ -62,10 +71,34 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
                     self.sakkyokuArray.append(document.data()["sakkyoku"]as! String)
                     self.osusumeArray.append(document.data()["osusume"]as! String)
                     self.kyokumeiArray.append(document.data()["kyokumei"]as! String)
-                    table.reloadData()
+                    let docRef = firestore.collection("user").document(document.data()["userUid"]as! String)
+                    docRef.getDocument { (document, error) in
+                        if let document = document, document.exists {
+                            let dataDescription = document.data()?["userName"] as? String
+                            let dataPhoto = document.data()?["photo"] as? String
+                            self.userUidArray.append(dataDescription!)
+                            self.photoURLArray.append(dataPhoto!)
+                            print(photoURLArray)
+                            table.reloadData()
+                        }
+                    }
+//                    let docRef2 = firestore.collection("user").document(document.data()["userUid"]as! String)
+//                    docRef2.getDocument { (document, error) in
+//                        if let document = document, document.exists {
+//                            let dataDescription = document.data()?["photo"] as? String
+//                            print("Document data: \(dataDescription)")
+//                            self.photoURLArray.append(dataDescription!)
+//                            print(photoURLArray)
+//                            table.reloadData()
+//                        } else {
+//                            print("Document does not exist")
+//                        }
+//                    }
+//                    table.reloadData()
                 }
             }
         }
+      
         
         table.rowHeight = 275
         
@@ -85,6 +118,10 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
 
     @IBAction func tapShareStartButton() {
         
+    }
+    
+    @IBAction func reloadDataButton() {
+        table.reloadData()
     }
     
     
@@ -112,6 +149,7 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
         cell.vocalLabel.text = vocalArray[indexPath.row]
         cell.osusumeLabel.text = osusumeArray[indexPath.row]
         cell.kyokumeiLavel.text = kyokumeiArray[indexPath.row]
+        cell.userNameLavel.text = userUidArray[indexPath.row]
         
         
         
